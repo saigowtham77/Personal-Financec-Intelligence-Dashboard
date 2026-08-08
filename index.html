@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ledgerline — Personal Finance Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="auth-page">
+  <div class="auth-side">
+    <div class="brand-mark"><span class="glyph">L</span> Ledgerline</div>
+    <div class="pitch">
+      <div class="eyebrow">Personal Finance Intelligence</div>
+      <h1>Every rupee, read like a ledger. Every month, forecast like an analyst.</h1>
+      <p>Upload a bank or card statement and Ledgerline cleans it, categorizes every transaction, scores your financial health, and projects next month's spend — all in your browser, nothing uploaded to a server.</p>
+    </div>
+    <div class="tape-stats">
+      <div><strong>100%</strong>client-side</div>
+      <div><strong>10+</strong>auto categories</div>
+      <div><strong>0</strong>data leaves device</div>
+    </div>
+  </div>
+
+  <div class="auth-form-wrap">
+    <div class="auth-card">
+      <div id="loginPanel">
+        <h2>Welcome back</h2>
+        <div class="sub">Sign in to open your dashboard.</div>
+        <div class="auth-error" id="loginError">Incorrect email or password.</div>
+        <form id="loginForm">
+          <div class="field">
+            <label for="loginEmail">Email</label>
+            <input type="email" id="loginEmail" placeholder="you@example.com" required>
+          </div>
+          <div class="field">
+            <label for="loginPass">Password</label>
+            <div class="field-pass-wrap">
+              <input type="password" id="loginPass" placeholder="••••••••" required>
+              <button type="button" class="toggle-vis" data-target="loginPass">show</button>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">Sign in</button>
+        </form>
+        <div class="auth-switch">No account yet? <button type="button" id="toSignup">Create one</button></div>
+        <div class="form-note">Demo credentials: <span class="mono">demo@ledgerline.app</span> / <span class="mono">demo1234</span> — or create your own; accounts and statements are stored only in this browser's local storage.</div>
+      </div>
+
+      <div id="signupPanel" class="hidden">
+        <h2>Create your account</h2>
+        <div class="sub">Set up a login for this browser.</div>
+        <div class="auth-error" id="signupError">Something's not right.</div>
+        <form id="signupForm">
+          <div class="field">
+            <label for="suName">Full name</label>
+            <input type="text" id="suName" placeholder="Asha Rao" required>
+          </div>
+          <div class="field">
+            <label for="suEmail">Email</label>
+            <input type="email" id="suEmail" placeholder="you@example.com" required>
+          </div>
+          <div class="field">
+            <label for="suPass">Password</label>
+            <div class="field-pass-wrap">
+              <input type="password" id="suPass" placeholder="At least 6 characters" minlength="6" required>
+              <button type="button" class="toggle-vis" data-target="suPass">show</button>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">Create account</button>
+        </form>
+        <div class="auth-switch">Already have one? <button type="button" id="toLogin">Sign in</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/auth.js"></script>
+</body>
+</html>
