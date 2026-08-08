@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ledgerline — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.3/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div class="shell">
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand-mark"><span class="glyph">L</span> Ledgerline</div>
+
+    <div class="nav-group-label">Overview</div>
+    <button class="nav-item active" data-view="overview"><span class="ic">◆</span> Dashboard</button>
+    <button class="nav-item" data-view="upload"><span class="ic">↑</span> Upload Statement</button>
+
+    <div class="nav-group-label">Analysis</div>
+    <button class="nav-item" data-view="transactions"><span class="ic">≡</span> Transactions</button>
+    <button class="nav-item" data-view="categories"><span class="ic">◍</span> Categories</button>
+    <button class="nav-item" data-view="trends"><span class="ic">↗</span> Trends & Predictions</button>
+    <button class="nav-item" data-view="health"><span class="ic">♥</span> Financial Health</button>
+
+    <div class="nav-group-label">Manage</div>
+    <button class="nav-item" data-view="blocklist"><span class="ic">!</span> Dues & Blocklist <span class="nav-badge hidden" id="dueBadge">0</span></button>
+    <button class="nav-item" data-view="reports"><span class="ic">▤</span> Reports & Export</button>
+    <button class="nav-item" data-view="settings"><span class="ic">⚙</span> Settings</button>
+
+    <div class="sidebar-foot">
+      <button class="nav-item" id="sidebarLogout"><span class="ic">⏻</span> Log out</button>
+    </div>
+  </aside>
+
+  <!-- ===================== MAIN ===================== -->
+  <div class="main">
+    <div class="topbar">
+      <button class="menu-btn" id="menuToggle">☰</button>
+      <div class="topbar-title" id="viewTitle">
+        <span class="eyebrow">Ledgerline</span>
+        Overview
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="quickHideBtn" title="Hide amounts">◐</button>
+        <div class="profile-wrap">
+          <button class="profile-chip" id="profileChipBtn">
+            <span class="avatar" id="avatarInitial">U</span>
+            <span id="profileNameChip">User</span>
+          </button>
+          <div class="profile-menu" id="profileMenu">
+            <div class="p-head">
+              <div class="name" id="pmName">User</div>
+              <div class="mail" id="pmEmail">user@example.com</div>
+            </div>
+            <div class="p-detail"><span class="k">Statements loaded</span><span class="v" id="pmStatements">0</span></div>
+            <div class="p-detail"><span class="k">Account ref</span><span class="v masked" id="pmAccountRef">•••• ••••</span></div>
+            <div class="p-toggle">
+              Hide balances everywhere
+              <label class="switch"><input type="checkbox" id="hideBalancesToggle"><span class="knob"></span></label>
+            </div>
+            <button class="menu-action" data-view="settings" id="pmSettingsBtn"><span class="ic">⚙</span> Settings</button>
+            <button class="menu-action" id="pmResetBtn"><span class="ic">⟲</span> Clear my data</button>
+            <button class="menu-action logout" id="pmLogoutBtn"><span class="ic">⏻</span> Log out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ============ OVERVIEW ============ -->
+      <section class="view active" id="view-overview">
+        <div class="grid-4" id="statCards">
+          <!-- filled by app.js -->
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head"><h3>Income vs. expenses</h3><span class="tag">Monthly</span></div>
+            <div class="canvas-wrap"><canvas id="chartOverviewTrend"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3>Spending by category</h3><span class="tag">This period</span></div>
+            <div class="canvas-wrap"><canvas id="chartOverviewPie"></canvas></div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head"><h3>Smart insights</h3><span class="tag">Auto-generated</span></div>
+            <div id="insightsList"></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3>Financial health score</h3><span class="tag">Composite index</span></div>
+            <div class="gauge-wrap">
+              <svg width="110" height="110" viewBox="0 0 110 110">
+                <circle cx="55" cy="55" r="46" fill="none" stroke="rgba(237,239,238,0.08)" stroke-width="10"/>
+                <circle id="gaugeArc" cx="55" cy="55" r="46" fill="none" stroke="#4FD1AE" stroke-width="10"
+                        stroke-dasharray="289" stroke-dashoffset="289" stroke-linecap="round"
+                        transform="rotate(-90 55 55)"/>
+              </svg>
+              <div class="gauge-label-block">
+                <div class="gauge-score mono" id="ovHealthScore">--</div>
+                <div class="gauge-tag" id="ovHealthBand">No data</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ UPLOAD ============ -->
+      <section class="view" id="view-upload">
+        <div class="card">
+          <div class="card-head"><h3>Upload a bank or card statement</h3><span class="tag">CSV only</span></div>
+          <div class="upload-zone" id="dropZone">
+            <div class="up-icon">⇧</div>
+            <h4>Drag a CSV file here, or click to browse</h4>
+            <p>Works with most bank, card, and payment-app exports — Date, Description and Amount columns are auto-detected.</p>
+            <input type="file" id="fileInput" accept=".csv" class="hidden">
+            <button class="btn btn-primary" id="browseBtn" style="width:auto;">Choose CSV file</button>
+            <div class="chip-row">
+              <span class="chip">Date</span><span class="chip">Description</span><span class="chip">Amount</span>
+              <span class="chip">or Debit/Credit</span><span class="chip">or Type column</span>
+            </div>
+          </div>
+          <div class="add-form" style="margin-top:18px;">
+            <button class="btn btn-ghost btn-sm" id="loadSampleBtn">Load sample statement instead</button>
+            <button class="btn btn-danger btn-sm hidden" id="clearDataBtn">Clear all loaded transactions</button>
+          </div>
+          <div id="uploadStatus" style="margin-top:14px; font-size:13px; color: var(--text-muted);"></div>
+        </div>
+
+        <!-- Verification panel: shown after a file is parsed, before it's committed -->
+        <div class="card hidden" id="verifyPanel">
+          <div class="card-head">
+            <h3>Verify before importing</h3>
+            <span class="tag" id="verifyStatusTag">—</span>
+          </div>
+
+          <div class="grid-4" id="verifySummaryCards" style="margin-bottom:18px;"></div>
+
+          <div class="grid-2" style="margin-bottom:18px;">
+            <div>
+              <div style="font-family:var(--font-mono); font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-faint); margin-bottom:8px;">Detected columns</div>
+              <div id="verifyColumns" class="chip-row" style="justify-content:flex-start;"></div>
+            </div>
+            <div>
+              <div style="font-family:var(--font-mono); font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-faint); margin-bottom:8px;">Issues found</div>
+              <div id="verifyIssues" style="font-size:12.5px; color:var(--text-muted); max-height:120px; overflow:auto;"></div>
+            </div>
+          </div>
+
+          <div style="font-family:var(--font-mono); font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-faint); margin-bottom:8px;">Preview — first rows as they'll be imported</div>
+          <div class="table-scroll" style="max-height:260px;">
+            <table>
+              <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Direction</th><th style="text-align:right;">Amount</th></tr></thead>
+              <tbody id="verifyPreviewBody"></tbody>
+            </table>
+          </div>
+
+          <div class="add-form">
+            <button class="btn btn-primary" style="width:auto;" id="confirmImportBtn">Confirm & import these transactions</button>
+            <button class="btn btn-ghost" style="width:auto;" id="discardImportBtn">Discard</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ TRANSACTIONS ============ -->
+      <section class="view" id="view-transactions">
+        <div class="card">
+          <div class="card-head"><h3>All transactions</h3><span class="tag" id="txnCount">0 rows</span></div>
+          <div class="toolbar" style="margin-bottom:14px;">
+            <input type="text" id="txnSearch" placeholder="Search description…">
+            <select id="txnCategoryFilter"><option value="">All categories</option></select>
+            <select id="txnDirectionFilter">
+              <option value="">All directions</option>
+              <option value="debit">Debit only</option>
+              <option value="credit">Credit only</option>
+            </select>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Direction</th><th style="text-align:right;">Amount</th></tr></thead>
+              <tbody id="txnTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ CATEGORIES ============ -->
+      <section class="view" id="view-categories">
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head"><h3>Top spending categories</h3><span class="tag">All time</span></div>
+            <div class="canvas-wrap"><canvas id="chartCatBar"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3>Category share</h3><span class="tag">All time</span></div>
+            <div class="canvas-wrap"><canvas id="chartCatPie"></canvas></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Category breakdown</h3><span class="tag" id="catCount">0 categories</span></div>
+          <div id="categoryTable"></div>
+        </div>
+      </section>
+
+      <!-- ============ TRENDS & PREDICTIONS ============ -->
+      <section class="view" id="view-trends">
+        <div class="grid-4" id="predictionCards"></div>
+        <div class="card">
+          <div class="card-head"><h3>Next month projection</h3><span class="tag" id="predictionMethodTag">—</span></div>
+          <div class="canvas-wrap"><canvas id="chartPrediction"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Per-category next-month estimate</h3><span class="tag">Based on trend</span></div>
+          <div id="catPredictionTable"></div>
+        </div>
+      </section>
+
+      <!-- ============ HEALTH ============ -->
+      <section class="view" id="view-health">
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head"><h3>Financial health score</h3><span class="tag">Composite index</span></div>
+            <div class="gauge-wrap">
+              <svg width="140" height="140" viewBox="0 0 110 110">
+                <circle cx="55" cy="55" r="46" fill="none" stroke="rgba(237,239,238,0.08)" stroke-width="10"/>
+                <circle id="gaugeArcBig" cx="55" cy="55" r="46" fill="none" stroke="#4FD1AE" stroke-width="10"
+                        stroke-dasharray="289" stroke-dashoffset="289" stroke-linecap="round"
+                        transform="rotate(-90 55 55)"/>
+              </svg>
+              <div class="gauge-label-block">
+                <div class="gauge-score mono" id="healthScoreBig">--</div>
+                <div class="gauge-tag" id="healthBandBig">No data</div>
+                <div class="gauge-desc">Blends savings rate, spending stability, category balance, on-time dues, and trend direction into a single 0–100 score.</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3>Score breakdown</h3><span class="tag">5 factors</span></div>
+            <div id="healthFactors"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ BLOCKLIST / DUES ============ -->
+      <section class="view" id="view-blocklist">
+        <div class="card">
+          <div class="card-head"><h3>Unpaid dues & blocklist</h3><span class="tag" id="dueCountTag">0 tracked</span></div>
+          <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;">Track bills, EMIs, or people who owe or are owed money. Anything past its due date is automatically flagged overdue and lowers your health score.</p>
+          <div id="blocklistItems"></div>
+          <div class="add-form">
+            <input type="text" id="dueWho" placeholder="Who / what (e.g. Credit card EMI)">
+            <input type="number" id="dueAmount" placeholder="Amount (₹)">
+            <input type="date" id="dueDate">
+            <button class="btn btn-primary" style="width:auto;" id="addDueBtn">Add to list</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ REPORTS ============ -->
+      <section class="view" id="view-reports">
+        <div class="card">
+          <div class="card-head"><h3>Export reports</h3><span class="tag">Local files</span></div>
+          <p style="color:var(--text-muted); font-size:13px;">Generate a report from everything currently loaded. Files are created and downloaded directly from your browser.</p>
+          <div class="add-form">
+            <button class="btn btn-primary" style="width:auto;" id="exportCsvBtn">Export cleaned transactions (CSV)</button>
+            <button class="btn btn-ghost" style="width:auto;" id="exportSummaryBtn">Export monthly summary (CSV)</button>
+            <button class="btn btn-ghost" style="width:auto;" id="exportPdfBtn">Export report (Print / Save as PDF)</button>
+          </div>
+        </div>
+        <div class="card" id="printableReport">
+          <div class="card-head"><h3>Report preview</h3><span class="tag">Auto-updates</span></div>
+          <div id="reportPreview"></div>
+        </div>
+      </section>
+
+      <!-- ============ SETTINGS ============ -->
+      <section class="view" id="view-settings">
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head"><h3>Profile</h3><span class="tag">This browser</span></div>
+            <div class="field"><label>Name</label><input type="text" id="settingsName"></div>
+            <div class="field"><label>Email</label><input type="text" id="settingsEmail" disabled></div>
+            <div class="p-toggle" style="padding:8px 0;">
+              Hide balances by default
+              <label class="switch"><input type="checkbox" id="settingsHideToggle"><span class="knob"></span></label>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3>Custom category rule</h3><span class="tag">Keyword match</span></div>
+            <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;">Teach the categorizer a new keyword — e.g. map "school fee" to Education.</p>
+            <div class="field"><label>Keyword contained in description</label><input type="text" id="ruleKeyword" placeholder="e.g. school fee"></div>
+            <div class="field"><label>Category</label><input type="text" id="ruleCategory" placeholder="e.g. Education"></div>
+            <button class="btn btn-primary" style="width:auto;" id="addRuleBtn">Save rule & re-categorize</button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+    <div class="footer-note">Ledgerline · all analysis runs locally in your browser · no statement data is ever uploaded to a server</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/storage.js"></script>
+<script src="js/parser.js"></script>
+<script src="js/categorize.js"></script>
+<script src="js/analytics.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
